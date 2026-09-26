@@ -1,0 +1,151 @@
+"""Streamlit page for exploring sets.
+
+Optional dependency for Venn diagrams:
+    pip install matplotlib-venn
+"""
+
+import re
+
+import matplotlib.pyplot as plt
+import streamlit as st
+
+try:
+    from matplotlib_venn import venn2, venn3
+except ImportError:
+    venn2 = venn3 = None
+
+
+def parse_set_input(text):
+    """Parse comma-separated numbers or words into a set."""
+    if not text or not text.strip():
+        return set()
+
+    text = text.replace("{", "").replace("}", "")
+    values = []
+    for token in re.split(r"[\s,;]+", text):
+        token = token.strip()
+        if not token:
+            continue
+        try:
+            values.append(float(token) if "." in token else int(token))
+        except ValueError:
+            values.append(token)
+    return set(values)
+
+
+def union(*sets):
+    result = set()
+    for current in sets:
+        result |= set(current)
+    return result
+
+
+def intersection(*sets):
+    if not sets:
+        return set()
+    result = set(sets[0])
+    for current in sets[1:]:
+        result &= set(current)
+    return result
+
+
+def calculate_operation(sets, operation):
+    if len(sets) == 2:
+        a, b = sets
+        operations = {
+            "A ∪ B": (union(a, b), "Elements in A or B."),
+            "A ∩ B": (intersection(a, b), "Elements present in both A and B."),
+            "A − B": (a - b, "Elements in A but not in B."),
+            "B − A": (b - a, "Elements in B but not in A."),
+            "A Δ B": (a ^ b, "Elements in exactly one of A and B."),
+            "A'": (union(a, b) - a, "Elements in the chosen universe that are not in A."),
+        }
+        return operations[operation]
+
+    if operation.endswith("union"):
+        return union(*sets), "Elements present in at least one selected set."
+    return intersection(*sets), "Elements common to every selected set."
+
+
+def venn_figure(sets, labels):
+    figure, axis = plt.subplots(figsize=(6, 5))
+
+    if len(sets) == 2 and venn2 is not None:
+        a, b = sets
+        venn2((len(a - b), len(b - a), len(a & b)), set_labels=labels, ax=axis)
+    elif len(sets) == 3 and venn3 is not None:
+        a, b, c = sets
+        venn3(
+            (
+                len(a - (b | c)),
+                len(b - (a | c)),
+                len(c - (a | b)),
+                len((a & b) - c),
+                len((a & c) - b),
+                len((b & c) - a),
+                len(a & b & c),
+            ),
+            set_labels=labels,
+            ax=axis,
+        )
+    else:
+        axis.text(
+            0.5,
+            0.5,
+            "Install matplotlib-venn for a Venn diagram.\n"
+            "Venn diagrams are supported for two or three sets.",
+            ha="center",
+            va="center",
+        )
+    axis.set_title("Venn diagram")
+    return figure
+
+
+st.set_page_config(page_title="Sets", page_icon="∪", layout="wide")
+st.title("Sets")
+st.write("Enter sets, choose an operation, and inspect the result visually.")
+
+number_of_sets = st.selectbox("Number of sets", [2, 3, 4, 5])
+labels = ["A", "B", "C", "D", "E"]
+defaults = ["1,2,3,4", "3,4,5,6", "2,4,6,8", "1,3,5,7", "2,3,4,5"]
+
+entered_sets = []
+for index in range(number_of_sets):
+    entered = st.text_input(
+        f"Set {labels[index]}",
+        value=defaults[index],
+        key=f"set_input_{index}",
+        help="Enter values separated by commas.",
+    )
+    entered_sets.append(parse_set_input(entered))
+
+if not any(entered_sets):
+    st.warning("Enter at least one value in a set.")
+    st.stop()
+
+if number_of_sets == 2:
+    operation = st.selectbox(
+        "Operation",
+        ["A ∪ B", "A ∩ B", "A − B", "B − A", "A Δ B", "A'"],
+    )
+else:
+    names = " ∪ ".join(labels[:number_of_sets])
+    intersection_name = " ∩ ".join(labels[:number_of_sets])
+    operation = st.selectbox("Operation", [f"{names} union", f"{intersection_name} intersection"])
+
+result, explanation = calculate_operation(entered_sets, operation)
+
+st.header("Result and explanation")
+st.latex(operation)
+st.metric("Number of elements", len(result))
+st.write("Result:", sorted(result, key=str))
+st.info(explanation)
+
+st.header("Venn diagram")
+st.pyplot(
+    venn_figure(
+        entered_sets[:3],
+        labels[: min(number_of_sets, 3)],
+    ),
+    width="stretch",
+)
