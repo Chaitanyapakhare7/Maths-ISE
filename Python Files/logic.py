@@ -155,61 +155,211 @@ def results_for_operation(operation, a, b):
 
 
 st.set_page_config(page_title="Logic", page_icon="¬", layout="wide")
-st.title("Logic")
-st.write("Explore Boolean operations, truth tables, and conditional propositions.")
 
-st.header("Basic logical operations")
-tabs = st.tabs(["AND", "OR", "NOT", "NAND", "NOR", "XOR", "XNOR"])
+st.markdown(
+    """
+    <style>
+    :root {
+        --ice-pink: #fff1f3;
+        --card-pink: #fffafb;
+        --soft-pink: #fbe3e7;
+        --rose: #b86f78;
+        --rose-dark: #6f3e46;
+        --warm-charcoal: #3f3032;
+        --muted-rose: #8b6569;
+        --border: #d9aeb2;
+    }
 
-for tab, operation in zip(tabs, ["AND", "OR", "NOT", "NAND", "NOR", "XOR", "XNOR"]):
-    with tab:
-        a = st.toggle("A", value=True, key=f"{operation}_a")
-        if operation == "NOT":
-            result = not a
-            st.dataframe(pd.DataFrame([{"A": a, "Result": result}]), width="stretch")
+    .stApp {
+        background: var(--ice-pink);
+        color: var(--warm-charcoal);
+    }
+
+    [data-testid="stHeader"] {
+        background: rgba(255, 241, 243, 0.82);
+    }
+
+    [data-testid="stAppViewContainer"] > .main {
+        background:
+            radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.75), transparent 30rem),
+            var(--ice-pink);
+    }
+
+    [data-testid="stMainBlockContainer"] {
+        max-width: 1180px;
+        padding-top: 3rem;
+        padding-bottom: 4rem;
+    }
+
+    .hero {
+        padding: 0.5rem 0 1.4rem;
+    }
+
+    .eyebrow {
+        color: var(--rose);
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        margin-bottom: 0.45rem;
+    }
+
+    .hero h1 {
+        color: var(--rose-dark);
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        letter-spacing: -0.045em;
+        line-height: 1;
+        margin: 0;
+    }
+
+    .hero p {
+        color: var(--muted-rose);
+        font-size: 1.08rem;
+        margin: 0.8rem 0 0;
+    }
+
+    [data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(255, 250, 251, 0.88);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 12px 30px rgba(111, 62, 70, 0.08);
+        padding: 1.15rem 1.35rem;
+    }
+
+    h2, h3 {
+        color: var(--rose-dark) !important;
+        letter-spacing: -0.025em;
+    }
+
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stCaptionContainer"] {
+        color: var(--warm-charcoal);
+    }
+
+    [data-baseweb="select"] > div,
+    [data-testid="stTextInput"] input {
+        background: #fffdfd;
+        border: 1px solid var(--border);
+        border-radius: 11px;
+        color: var(--warm-charcoal);
+    }
+
+    [data-baseweb="select"] > div:focus-within,
+    [data-testid="stTextInput"] input:focus {
+        border-color: var(--rose);
+        box-shadow: 0 0 0 2px rgba(184, 111, 120, 0.16);
+    }
+
+    [data-testid="stTabs"] [data-baseweb="tab-list"] {
+        gap: 0.35rem;
+        border-bottom: 1px solid var(--soft-pink);
+    }
+
+    [data-testid="stTabs"] button {
+        color: var(--muted-rose);
+        border-radius: 9px 9px 0 0;
+    }
+
+    [data-testid="stTabs"] button[aria-selected="true"] {
+        color: var(--rose-dark);
+        background: var(--soft-pink);
+    }
+
+    [data-testid="stDataFrame"] {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    [data-testid="stAlert"] {
+        border-radius: 12px;
+        border-color: var(--border);
+    }
+
+    [data-testid="stToggle"] [role="switch"][aria-checked="true"] {
+        background-color: var(--rose);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <div class="hero">
+        <div class="eyebrow">A visual logic studio</div>
+        <h1>Logic</h1>
+        <p>Explore Boolean operations, truth tables, and conditional propositions.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.container(border=True):
+    st.subheader("Basic logical operations")
+    st.caption("Switch between operations to compare their truth tables and results.")
+    tabs = st.tabs(["AND", "OR", "NOT", "NAND", "NOR", "XOR", "XNOR"])
+
+    for tab, operation in zip(tabs, ["AND", "OR", "NOT", "NAND", "NOR", "XOR", "XNOR"]):
+        with tab:
+            input_columns = st.columns(2) if operation != "NOT" else [st.container()]
+            with input_columns[0]:
+                a = st.toggle("A", value=True, key=f"{operation}_a")
+            if operation == "NOT":
+                result = not a
+                st.dataframe(pd.DataFrame([{"A": a, "Result": result}]), width="stretch")
+            else:
+                with input_columns[1]:
+                    b = st.toggle("B", value=False, key=f"{operation}_b")
+                results = {
+                    "AND": a and b,
+                    "OR": a or b,
+                    "NAND": not (a and b),
+                    "NOR": not (a or b),
+                    "XOR": a != b,
+                    "XNOR": a == b,
+                }
+                st.markdown(f"**Result:** `{results[operation]}`")
+                rows = [
+                    {"A": x, "B": y, "Result": results_for_operation(operation, x, y)}
+                    for x, y in product([False, True], repeat=2)
+                ]
+                st.dataframe(pd.DataFrame(rows), width="stretch")
+
+with st.container(border=True):
+    st.subheader("User-defined logical expression")
+    st.caption("Write an expression with AND, OR, NOT, XOR, and parentheses.")
+    expression = st.text_input("Enter logical expression", "(A AND B) OR NOT C")
+
+    try:
+        table, variables = truth_table(expression)
+        st.markdown(f"**Variables:** `{', '.join(variables)}`")
+        st.dataframe(table, width="stretch")
+        category = classify(table["Result"])
+        if category == "Tautology":
+            st.success("🟢 Tautology — always true.")
+        elif category == "Contradiction":
+            st.error("🔴 Contradiction — always false.")
         else:
-            b = st.toggle("B", value=False, key=f"{operation}_b")
-            results = {
-                "AND": a and b,
-                "OR": a or b,
-                "NAND": not (a and b),
-                "NOR": not (a or b),
-                "XOR": a != b,
-                "XNOR": a == b,
-            }
-            st.write("Result:", results[operation])
-            rows = [
-                {"A": x, "B": y, "Result": results_for_operation(operation, x, y)}
-                for x, y in product([False, True], repeat=2)
-            ]
-            st.dataframe(pd.DataFrame(rows), width="stretch")
+            st.warning("🟡 Contingency — true in some cases and false in others.")
+    except ValueError as error:
+        st.error(str(error))
 
-st.header("User-defined logical expression")
-expression = st.text_input("Enter logical expression", "(A AND B) OR NOT C")
+with st.container(border=True):
+    st.subheader("Conditional propositions")
+    st.caption("Compare an implication with its converse, inverse, and contrapositive.")
+    proposition_columns = st.columns(2)
+    with proposition_columns[0]:
+        p = st.toggle("P", value=True, key="conditional_p")
+    with proposition_columns[1]:
+        q = st.toggle("Q", value=False, key="conditional_q")
 
-try:
-    table, variables = truth_table(expression)
-    st.write("Variables:", ", ".join(variables))
-    st.dataframe(table, width="stretch")
-    category = classify(table["Result"])
-    if category == "Tautology":
-        st.success("🟢 Tautology — always true.")
-    elif category == "Contradiction":
-        st.error("🔴 Contradiction — always false.")
-    else:
-        st.warning("🟡 Contingency — true in some cases and false in others.")
-except ValueError as error:
-    st.error(str(error))
-
-st.header("Conditional propositions")
-p = st.toggle("P", value=True, key="conditional_p")
-q = st.toggle("Q", value=False, key="conditional_q")
-
-conditional_rows = [
-    {"Statement": "Original", "Formula": "P → Q", "Result": implication(p, q)},
-    {"Statement": "Converse", "Formula": "Q → P", "Result": implication(q, p)},
-    {"Statement": "Inverse", "Formula": "¬P → ¬Q", "Result": implication(not p, not q)},
-    {"Statement": "Contrapositive", "Formula": "¬Q → ¬P", "Result": implication(not q, not p)},
-]
-st.dataframe(pd.DataFrame(conditional_rows), width="stretch")
-st.info("An implication is false only when P is true and Q is false.")
+    conditional_rows = [
+        {"Statement": "Original", "Formula": "P → Q", "Result": implication(p, q)},
+        {"Statement": "Converse", "Formula": "Q → P", "Result": implication(q, p)},
+        {"Statement": "Inverse", "Formula": "¬P → ¬Q", "Result": implication(not p, not q)},
+        {"Statement": "Contrapositive", "Formula": "¬Q → ¬P", "Result": implication(not q, not p)},
+    ]
+    st.dataframe(pd.DataFrame(conditional_rows), width="stretch")
+    st.info("An implication is false only when P is true and Q is false.")
