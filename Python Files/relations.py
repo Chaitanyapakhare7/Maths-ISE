@@ -317,13 +317,15 @@ def hasse_diagram(relation, domain):
     return figure
 
 
-# Streamlit page layout
-# Streamlit page layout
+# Streamlit page layout# Streamlit page layout
 st.set_page_config(
     page_title="Relations & Functions",
     page_icon="↔",
     layout="wide",
 )
+
+if "relation_pairs" not in st.session_state:
+    st.session_state.relation_pairs = set()
 
 st.markdown("""
 <style>
@@ -344,6 +346,13 @@ st.markdown("""
     border-bottom: 2px solid #f7e9e7;
     padding-bottom: 8px;
     text-transform: uppercase;
+}
+.step-label {
+    color: #9d1c14;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
 }
 .set-display {
     font-family: monospace;
@@ -374,75 +383,128 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.title("RELATIONS & FUNCTIONS")
-st.markdown("Analyze relations, relation properties, domain, range, transitive closure, partial orders and Hasse diagrams.")
+st.markdown("Analyze mathematical relations effortlessly. Build relations, test properties, find closures, and generate Hasse diagrams without writing complex syntax.")
 
-with st.form("relation_input_form"):
-    mode = st.radio(
-        "Relation Type",
-        [
-            "Relation on a single set (A → A)",
-            "Relation between two sets (A → B)",
-        ],
-    )
+def format_set(s):
+    if not s:
+        return "∅"
+    return "{ " + ", ".join(map(str, sorted(s, key=str))) + " }"
 
-    col1, col2 = st.columns(2)
-    with col1:
-        domain_text = st.text_input(
-            "Set A",
-            value="1, 2, 3",
-            help="Enter elements separated by commas. Example: 1, 2, 3"
-        )
+def format_relation(r):
+    if not r:
+        return "∅"
+    pairs = sorted(r, key=str)
+    return "{ " + ", ".join(f"({a},{b})" for a, b in pairs) + " }"
 
-    with col2:
-        codomain_text = st.text_input(
-            "Set B",
-            value="2, 3, 4",
-            help="Only used if A → B is selected. Enter elements separated by commas."
-        )
+# --- 01 DEFINE SETS ---
+st.markdown('<div class="math-card"><div class="step-label">01 — DEFINE SETS</div>', unsafe_allow_html=True)
+mode = st.radio("Relation Type", ["Relation on a single set (A → A)", "Relation between two sets (A → B)"], horizontal=True)
 
-    relation_text = st.text_area(
-        "Relation R",
-        value="(1,2), (2,3), (3,3)",
-        help="Enter ordered pairs separated by commas. Example: (1,2), (2,3), (3,3)"
-    )
+col1, col2 = st.columns(2)
+with col1:
+    domain_text = st.text_input("Set A", value="1, 2, 3", help="Example: 1, 2, 3")
+with col2:
+    if mode.startswith("Relation between"):
+        codomain_text = st.text_input("Set B", value="a, b, c", help="Example: a, b, c")
+    else:
+        codomain_text = ""
+st.markdown('</div>', unsafe_allow_html=True)
 
-    analyze_btn = st.form_submit_button("ANALYZE RELATION", type="primary")
+try:
+    domain = parse_set_input(domain_text)
+    if mode.startswith("Relation between"):
+        codomain = parse_set_input(codomain_text)
+    else:
+        codomain = domain
+except ValueError as e:
+    st.error(str(e))
+    domain, codomain = set(), set()
+
+valid_pairs = set()
+for a, b in st.session_state.relation_pairs:
+    if a in domain and b in codomain:
+        valid_pairs.add((a, b))
+if len(valid_pairs) != len(st.session_state.relation_pairs):
+    st.session_state.relation_pairs = valid_pairs
+
+# --- 02 BUILD RELATION ---
+st.markdown('<div class="math-card"><div class="step-label">02 — BUILD RELATION</div>', unsafe_allow_html=True)
+st.markdown("Select an element from the domain and its corresponding element from the codomain.")
+
+build_col1, build_col2, build_col3 = st.columns([2, 2, 1])
+domain_sorted = sorted(domain, key=str) if domain else [""]
+codomain_sorted = sorted(codomain, key=str) if codomain else [""]
+
+with build_col1:
+    from_val = st.selectbox("FROM", domain_sorted)
+with build_col2:
+    to_val = st.selectbox("TO", codomain_sorted)
+with build_col3:
+    st.write("") 
+    st.write("") 
+    if st.button("➕ ADD PAIR", type="primary", use_container_width=True):
+        if not domain or (mode.startswith("Relation between") and not codomain):
+            st.error("Sets cannot be empty.")
+        elif from_val == "" or to_val == "":
+            st.error("Please select valid elements.")
+        else:
+            try:
+                pair = (parse_scalar(str(from_val)), parse_scalar(str(to_val)))
+                if pair in st.session_state.relation_pairs:
+                    st.warning(f"Pair {pair} is already in the relation.")
+                else:
+                    st.session_state.relation_pairs.add(pair)
+                    st.rerun()
+            except ValueError:
+                pass
+
+st.markdown("---")
+st.markdown("**CURRENT RELATION**")
+
+if not st.session_state.relation_pairs:
+    st.info("No ordered pairs added yet. Select From and To values above and click Add Pair.")
+else:
+    cols = st.columns(4)
+    for idx, pair in enumerate(sorted(st.session_state.relation_pairs, key=str)):
+        with cols[idx % 4]:
+            if st.button(f"({pair[0]}, {pair[1]})  ❌", key=f"remove_{pair}"):
+                st.session_state.relation_pairs.remove(pair)
+                st.rerun()
+
+    st.markdown(f"<br><span class='set-display'>R = {format_relation(st.session_state.relation_pairs)}</span>", unsafe_allow_html=True)
+    
+    if st.button("CLEAR RELATION"):
+        st.session_state.relation_pairs.clear()
+        st.rerun()
+
+with st.expander("Advanced / Quick Input"):
+    quick_rel = st.text_input("Quick enter relation", placeholder="(1,2), (2,3)")
+    if st.button("APPLY QUICK INPUT"):
+        try:
+            rel = parse_relation_input(quick_rel, domain, codomain)
+            st.session_state.relation_pairs.update(rel)
+            st.rerun()
+        except ValueError as e:
+            st.error(str(e))
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+# --- 03 ANALYZE ---
+st.markdown('<div class="math-card"><div class="step-label">03 — ANALYZE</div>', unsafe_allow_html=True)
+analyze_btn = st.button("ANALYZE RELATION", type="primary")
+st.markdown('</div>', unsafe_allow_html=True)
 
 if analyze_btn:
-    try:
-        domain = parse_set_input(domain_text)
-        if not domain:
-            raise ValueError("Please enter at least one element in Set A.")
-
-        if mode.startswith("Relation between"):
-            codomain = parse_set_input(codomain_text)
-            if not codomain:
-                raise ValueError("Please enter at least one element in Set B.")
-        else:
-            codomain = domain
-
-        relation = parse_relation_input(
-            relation_text,
-            domain,
-            codomain,
-        )
-        if not relation:
-            raise ValueError("Please enter at least one valid relation pair.")
-            
-    except ValueError as error:
-        st.error(str(error))
+    relation = st.session_state.relation_pairs
+    if not domain:
+        st.error("Set A is empty.")
         st.stop()
-
-    def format_set(s):
-        if not s:
-            return "∅"
-        return "{ " + ", ".join(map(str, sorted(s, key=str))) + " }"
-
-    def format_relation(r):
-        if not r:
-            return "∅"
-        pairs = sorted(r, key=str)
-        return "{ " + ", ".join(f"({a},{b})" for a, b in pairs) + " }"
+    if mode.startswith("Relation between") and not codomain:
+        st.error("Set B is empty.")
+        st.stop()
+    if not relation:
+        st.error("Relation R is empty. Please add at least one pair.")
+        st.stop()
 
     # 1. RELATION SUMMARY
     st.markdown('<div class="math-card"><h4>RELATION SUMMARY</h4>', unsafe_allow_html=True)
