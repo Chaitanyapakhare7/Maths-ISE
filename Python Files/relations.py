@@ -253,43 +253,80 @@ def relation_diagram(domain, codomain, relation):
     return figure
 
 
+def calculate_hasse_levels(edges, domain):
+    levels = {node: 0 for node in domain}
+    predecessors = {node: set() for node in domain}
+    for first, second in edges:
+        if second in predecessors:
+            predecessors[second].add(first)
+        
+    changed = True
+    while changed:
+        changed = False
+        for node in domain:
+            if predecessors[node]:
+                max_pred = max(levels[p] for p in predecessors[node])
+                if levels[node] < max_pred + 1:
+                    levels[node] = max_pred + 1
+                    changed = True
+    return levels
+
+def generate_hasse_positions(levels, domain):
+    positions = {}
+    level_nodes = {}
+    for node, lvl in levels.items():
+        if lvl not in level_nodes:
+            level_nodes[lvl] = []
+        level_nodes[lvl].append(node)
+        
+    for lvl, nodes in level_nodes.items():
+        sorted_nodes = sorted(nodes, key=str)
+        n = len(sorted_nodes)
+        for i, node in enumerate(sorted_nodes):
+            x = i - (n - 1) / 2.0
+            positions[node] = (x, lvl)
+            
+    return positions
+
 def hasse_diagram(relation, domain):
-    """Draw a simple Hasse diagram using only Matplotlib."""
-    values = sorted(domain, key=str)
+    """Draw a mathematical Hasse diagram."""
     edges = hasse_edges(relation, domain)
+    levels = calculate_hasse_levels(edges, domain)
+    positions = generate_hasse_positions(levels, domain)
+    
+    if not positions:
+        return None
+        
+    max_level = max(levels.values()) if levels else 0
+    max_nodes_per_level = max(len([n for n, l in levels.items() if l == lvl]) for lvl in set(levels.values())) if levels else 1
+    
+    width = max(6.0, max_nodes_per_level * 1.5)
+    height = max(5.0, (max_level + 1) * 1.2)
 
-    positions = {
-        value: (index % 3, index // 3)
-        for index, value in enumerate(values)
-    }
-
-    figure, axis = plt.subplots(figsize=(7, 5))
+    figure, axis = plt.subplots(figsize=(width, height))
 
     for first, second in edges:
-        first_x, first_y = positions[first]
-        second_x, second_y = positions[second]
-
-        axis.annotate(
-            "",
-            xy=(second_x, second_y),
-            xytext=(first_x, first_y),
-            arrowprops={
-                "arrowstyle": "-",
-                "color": "darkgreen",
-                "linewidth": 2,
-            },
-        )
+        if first in positions and second in positions:
+            first_x, first_y = positions[first]
+            second_x, second_y = positions[second]
+            axis.plot(
+                [first_x, second_x], 
+                [first_y, second_y], 
+                color="#526173", 
+                linewidth=1.5,
+                zorder=1
+            )
 
     for value, (x_position, y_position) in positions.items():
         axis.scatter(
             x_position,
             y_position,
-            s=1400,
-            color="lightblue",
-            edgecolors="black",
+            s=900,
+            color="#ffffff",
+            edgecolors="#0d1b2a",
+            linewidth=2,
             zorder=2,
         )
-
         axis.text(
             x_position,
             y_position,
@@ -297,23 +334,18 @@ def hasse_diagram(relation, domain):
             ha="center",
             va="center",
             fontsize=12,
+            color="#0d1b2a",
             zorder=3,
         )
 
-    axis.set_title("Hasse diagram")
-
-    axis.set_xlim(
-        -1,
-        max(2, len(values) - 1) + 1,
-    )
-
-    axis.set_ylim(
-        -1,
-        max(1, len(values) // 3) + 1,
-    )
+    xs = [x for x, y in positions.values()]
+    ys = [y for x, y in positions.values()]
+    if xs:
+        axis.set_xlim(min(xs) - 1, max(xs) + 1)
+    if ys:
+        axis.set_ylim(min(ys) - 0.5, max(ys) + 0.5)
 
     axis.axis("off")
-
     return figure
 
 
@@ -617,9 +649,18 @@ if analyze_btn:
 
     # 7. HASSE DIAGRAM
     st.markdown('<div class="math-card"><h4>HASSE DIAGRAM</h4>', unsafe_allow_html=True)
-    if partial_order:
-        st.markdown('<p style="color: #526173;">Shows the cover relations of a partial order.</p>', unsafe_allow_html=True)
-        st.pyplot(hasse_diagram(relation, domain), width="stretch")
+    if mode.startswith("Relation between"):
+        st.info("Not applicable for a relation between two different sets. A Hasse diagram requires a partial order relation on a single set.")
     else:
-        st.info("A Hasse diagram is available only for a partial order. This relation does not satisfy the requirements of a partial order.")
+        if partial_order:
+            st.markdown('<p style="color: #526173;">The Hasse diagram represents the cover relations of this partial order.</p>', unsafe_allow_html=True)
+            st.pyplot(hasse_diagram(relation, domain))
+        else:
+            st.markdown("<p style='color: #c5221f; font-weight: bold;'>⚠ Hasse diagram not applicable</p>", unsafe_allow_html=True)
+            st.markdown("<p>The given relation is not a partial order.<br>Required properties:</p>", unsafe_allow_html=True)
+            for prop in ["Reflexive", "Antisymmetric", "Transitive"]:
+                if props[prop]:
+                    st.markdown(f"✓ {prop}")
+                else:
+                    st.markdown(f"✗ {prop}")
     st.markdown('</div>', unsafe_allow_html=True)
