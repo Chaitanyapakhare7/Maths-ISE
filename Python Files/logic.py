@@ -175,31 +175,6 @@ def evaluate_expression(expression, values):
     return evaluate_tree(tree, values)
 
 
-def truth_table(expression):
-    """Generate the complete truth table for an expression."""
-    variables = variables_in(expression)
-
-    if not variables:
-        raise ValueError(
-            "Use at least one variable, such as A AND B."
-        )
-
-    rows = []
-
-    for combination in product([False, True], repeat=len(variables)):
-        values = dict(zip(variables, combination))
-
-        row = dict(values)
-        row["Result"] = evaluate_expression(
-            expression,
-            values,
-        )
-
-        rows.append(row)
-
-    return pd.DataFrame(rows), variables
-
-
 def classify(results):
     """Classify truth-table results."""
     results = list(results)
@@ -237,14 +212,50 @@ def implication(p, q):
     return (not p) or q
 
 
+def as_bit(value):
+    """Represent a logical value as 1 or 0 for table display."""
+    return int(bool(value))
+
+
+def truth_table(expression):
+    """Generate the complete truth table for an expression."""
+    variables = variables_in(expression)
+
+    if not variables:
+        raise ValueError(
+            "Use at least one variable, such as A AND B."
+        )
+
+    rows = []
+
+    for combination in product([False, True], repeat=len(variables)):
+        values = dict(zip(variables, combination))
+
+        row = {
+            variable: as_bit(value)
+            for variable, value in values.items()
+        }
+
+        row["Result"] = as_bit(
+            evaluate_expression(
+                expression,
+                values,
+            )
+        )
+
+        rows.append(row)
+
+    return pd.DataFrame(rows), variables
+
+
 def create_basic_truth_table(operation):
     """Create a truth table for a basic logical operation."""
     if operation == "NOT":
         return pd.DataFrame(
             [
                 {
-                    "A": value,
-                    "Result": not value,
+                    "A": as_bit(value),
+                    "Result": as_bit(not value),
                 }
                 for value in [False, True]
             ]
@@ -255,12 +266,14 @@ def create_basic_truth_table(operation):
     for a, b in product([False, True], repeat=2):
         rows.append(
             {
-                "A": a,
-                "B": b,
-                "Result": results_for_operation(
-                    operation,
-                    a,
-                    b,
+                "A": as_bit(a),
+                "B": as_bit(b),
+                "Result": as_bit(
+                    results_for_operation(
+                        operation,
+                        a,
+                        b,
+                    )
                 ),
             }
         )
@@ -311,13 +324,13 @@ for tab, operation in zip(tabs, operation_names):
 
             result = not a
 
-            st.write("Result:", result)
+            st.write("Result:", as_bit(result))
 
             selected_result = pd.DataFrame(
                 [
                     {
-                        "A": a,
-                        "Result": result,
+                        "A": as_bit(a),
+                        "Result": as_bit(result),
                     }
                 ]
             )
@@ -350,14 +363,14 @@ for tab, operation in zip(tabs, operation_names):
                 b,
             )
 
-            st.write("Result:", result)
+            st.write("Result:", as_bit(result))
 
             selected_result = pd.DataFrame(
                 [
                     {
-                        "A": a,
-                        "B": b,
-                        "Result": result,
+                        "A": as_bit(a),
+                        "B": as_bit(b),
+                        "Result": as_bit(result),
                     }
                 ]
             )
@@ -451,22 +464,22 @@ conditional_rows = [
     {
         "Statement": "Original",
         "Formula": "P → Q",
-        "Result": implication(p, q),
+        "Result": as_bit(implication(p, q)),
     },
     {
         "Statement": "Converse",
         "Formula": "Q → P",
-        "Result": implication(q, p),
+        "Result": as_bit(implication(q, p)),
     },
     {
         "Statement": "Inverse",
         "Formula": "¬P → ¬Q",
-        "Result": implication(not p, not q),
+        "Result": as_bit(implication(not p, not q)),
     },
     {
         "Statement": "Contrapositive",
         "Formula": "¬Q → ¬P",
-        "Result": implication(not q, not p),
+        "Result": as_bit(implication(not q, not p)),
     },
 ]
 
