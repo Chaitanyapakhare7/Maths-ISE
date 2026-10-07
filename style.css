@@ -1,15 +1,12 @@
-/* =========================
-   Base
-   ========================= */
+
 :root {
   --navy: #0d1b2a;
-  --red: #8f1d14; /* Using #8f1d14 as suggested for college name and primary red */
+  --red: #8f1d14;
   --secondary-red: #9d1c14;
   --light-red: #f7e9e7;
   --border: #e2e5e8;
   --muted: #526173;
-  --background: #ffffff; /* Requested #ffffff */
-}
+  --background: #ffffff;
 
 * {
   box-sizing: border-box;
@@ -30,9 +27,7 @@ body {
   padding: 40px 24px 60px;
 }
 
-/* =========================
-   College Header
-   ========================= */
+
 .college-header {
   text-align: center;
   margin-bottom: 20px;
@@ -52,9 +47,7 @@ body {
   margin: 0 auto;
 }
 
-/* =========================
-   Hero
-   ========================= */
+
 .hero {
   text-align: center;
   margin-bottom: 50px;
@@ -90,9 +83,7 @@ body {
   font-size: 0.9rem;
 }
 
-/* =========================
-   Developer / Guide Cards
-   ========================= */
+
 .project-info {
   display: flex;
   gap: 20px;
@@ -124,7 +115,7 @@ body {
   text-align: center;
 }
 
-/* Developer Card */
+
 .developer-list {
   display: flex;
   flex-direction: column;
@@ -157,7 +148,7 @@ body {
   text-align: right;
 }
 
-/* Guide Card */
+
 .guide-card {
   display: flex;
   flex-direction: column;
@@ -173,9 +164,7 @@ body {
   margin-top: 0;
 }
 
-/* =========================
-   Mathematical Modules
-   ========================= */
+
 .modules-section {
   margin-top: 20px;
 }
@@ -288,9 +277,7 @@ body {
   transform: translateX(4px);
 }
 
-/* =========================
-   Responsive Design
-   ========================= */
+
 @media (max-width: 992px) {
   .hero-title {
     font-size: 2.5rem;

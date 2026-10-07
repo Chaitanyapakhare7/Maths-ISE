@@ -358,7 +358,13 @@ st.set_page_config(
 
 if "relation_pairs" not in st.session_state:
     st.session_state.relation_pairs = set()
+<<<<<<< HEAD
 #
+=======
+
+
+
+>>>>>>> 4077e789116bf0ff0429e42496fdaf989746227c
 st.title("RELATIONS & FUNCTIONS")
 st.markdown("Analyze mathematical relations effortlessly. Build relations, test properties, find closures, and generate Hasse diagrams without writing complex syntax.")
 
