@@ -359,60 +359,7 @@ st.set_page_config(
 if "relation_pairs" not in st.session_state:
     st.session_state.relation_pairs = set()
 
-st.markdown("""
-<style>
-.math-card {
-    background-color: #ffffff;
-    border: 1px solid #e2e5e8;
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-.math-card h4 {
-    color: #0d1b2a !important;
-    margin-top: 0;
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-    font-weight: 700;
-    border-bottom: 2px solid #f7e9e7;
-    padding-bottom: 8px;
-    text-transform: uppercase;
-}
-.step-label {
-    color: #9d1c14;
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: 1px;
-    margin-bottom: 12px;
-}
-.set-display {
-    font-family: monospace;
-    font-size: 1.15rem;
-    color: #9d1c14;
-    background-color: #f7e9e7;
-    padding: 4px 8px;
-    border-radius: 4px;
-    display: inline-block;
-}
-.badge-yes {
-    background-color: #e6f4ea;
-    color: #137333;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: bold;
-    display: inline-block;
-}
-.badge-no {
-    background-color: #fce8e6;
-    color: #c5221f;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: bold;
-    display: inline-block;
-}
-</style>
-""", unsafe_allow_html=True)
+
 
 st.title("RELATIONS & FUNCTIONS")
 st.markdown("Analyze mathematical relations effortlessly. Build relations, test properties, find closures, and generate Hasse diagrams without writing complex syntax.")
