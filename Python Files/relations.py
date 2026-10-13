@@ -6,6 +6,7 @@ import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
+from theme import apply_theme
 
 
 def parse_scalar(value):
@@ -349,22 +350,17 @@ def hasse_diagram(relation, domain):
     return figure
 
 
-# Streamlit page layout# Streamlit page layout
+# Streamlit page layout
 st.set_page_config(
     page_title="Relations & Functions",
     page_icon="↔",
     layout="wide",
 )
+apply_theme()
 
 if "relation_pairs" not in st.session_state:
     st.session_state.relation_pairs = set()
-<<<<<<< HEAD
-#
-=======
 
-
-
->>>>>>> 4077e789116bf0ff0429e42496fdaf989746227c
 st.title("RELATIONS & FUNCTIONS")
 st.markdown("Analyze mathematical relations effortlessly. Build relations, test properties, find closures, and generate Hasse diagrams without writing complex syntax.")
 

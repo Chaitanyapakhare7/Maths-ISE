@@ -5,6 +5,7 @@ from itertools import product
 
 import pandas as pd
 import streamlit as st
+from theme import apply_theme
 
 
 KEYWORDS = {"AND", "OR", "NOT", "XOR"}
@@ -287,6 +288,8 @@ st.set_page_config(
     page_icon="¬",
     layout="wide",
 )
+
+apply_theme()
 
 st.title("Logic")
 
